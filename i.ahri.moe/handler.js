@@ -11,7 +11,7 @@ function LoadImage(req, res) {
     try {
         if (targetName == "favicon.ico") {
             // Ignore favicon requests
-            res.writeHead(200);
+            res.writeHead(204);
             res.end();
         }
         else {
@@ -21,29 +21,29 @@ function LoadImage(req, res) {
                 path: targetPathStub + targetName + extension
             };
 
-			// Fetch target image
-			var imgRequest = http.request(options, function (imgResponse) {
-				if (imgResponse.statusCode == 200) {
-					var data = "";
-					
-					// Read image data
-					imgResponse.setEncoding('binary');
-					imgResponse.on('data', function (chunk) {
-						data += chunk;
-					});
-					
-					// Resend image in response
-					imgResponse.on('end', function () {
-						res.writeHead(200, { "Content-Type": "image/jpeg"});
-						res.end(data, 'binary');
-					});
-					
-				}
-				else {
-					res.writeHead(imgResponse.statusCode);
-					res.end();
-				}
-			});
+            // Fetch target image
+            var imgRequest = http.request(options, function (imgResponse) {
+                if (imgResponse.statusCode == 200) {
+                    var data = "";
+                    
+                    // Read image data
+                    imgResponse.setEncoding('binary');
+                    imgResponse.on('data', function (chunk) {
+                        data += chunk;
+                    });
+                    
+                    // Resend image in response
+                    imgResponse.on('end', function () {
+                        res.writeHead(200, { "Content-Type": "image/jpeg"});
+                        res.end(data, 'binary');
+                    });
+                    
+                }
+                else {
+                    res.writeHead(imgResponse.statusCode);
+                    res.end();
+                }
+            });
             imgRequest.end();
         }
     }
