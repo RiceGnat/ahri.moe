@@ -1,7 +1,6 @@
 var http = require("http");
 var url = require("url");
 
-var targetProtocol = "http://";
 var targetHost = "www.ricegnat.com";
 var targetPathStub = "/junk/";
 var extension = ".jpg";
@@ -33,7 +32,7 @@ function LoadImage(req, res) {
 					});
 					
 					imgResponse.on('end', function () {
-						res.writeHead(200, { "Content-Type": "image/jpeg");
+						res.writeHead(200, { "Content-Type": "image/jpeg"});
 						res.write(data);
 						res.end();
 					});
@@ -43,7 +42,7 @@ function LoadImage(req, res) {
 					res.writeHead(imgResponse.statusCode);
 					res.end();
 				}
-			}
+			});
             imgRequest.end();
         }
     }
