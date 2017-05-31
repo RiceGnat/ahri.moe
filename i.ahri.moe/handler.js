@@ -11,12 +11,11 @@ function LoadImage(req, res) {
     try {
         if (targetName == "favicon.ico") {
             // Ignore favicon requests
-            res.writeHead(404);
+            res.writeHead(200);
             res.end();
         }
         else {
             var options = {
-                host: targetHost,
                 hostname: targetHost,
                 method: "GET",
                 path: targetPathStub + targetName + extension
@@ -24,17 +23,19 @@ function LoadImage(req, res) {
 
 			// Fetch target image
 			var imgRequest = http.request(options, function (imgResponse) {
-				if (imgRequest.statusCode == 200) {
-					var data;
+				if (imgResponse.statusCode == 200) {
+					var data = "";
 					
+					// Read image data
+					imgResponse.setEncoding('binary');
 					imgResponse.on('data', function (chunk) {
 						data += chunk;
 					});
 					
+					// Resend image in response
 					imgResponse.on('end', function () {
 						res.writeHead(200, { "Content-Type": "image/jpeg"});
-						res.write(data);
-						res.end();
+						res.end(data, 'binary');
 					});
 					
 				}
