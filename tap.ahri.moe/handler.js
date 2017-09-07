@@ -4,6 +4,10 @@ var $ = require("cheerio");
 
 var host = "http://tappedout.net/mtg-decks/";
 
+function ExtractTitle(htmlString) {
+    return $(".well-jumbotron h2", htmlString).text();
+}
+
 function LoadDeck(req, res) {
     var targetName = url.parse(req.url).pathname.substr(1);
     var path = host + targetName + "/";
@@ -21,12 +25,14 @@ function LoadDeck(req, res) {
         else {
             var deckRequest = http.request(path, (deckResponse) => {
                 if (deckResponse.statusCode == 200) {
-                    var pageString = "";
+                    var responseString = "";
                     deckResponse.on("data", (chunk) => {
-                        pageString += chunk;
+                        responseString += chunk;
                     }).on("end", () => {
+
+
                         res.writeHead(200);
-                        res.write(pageString);
+                        res.write(ExtractTitle(responseString));
                         res.end();
                     });
                 }
