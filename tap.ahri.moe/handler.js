@@ -1,16 +1,19 @@
-var http = require("http");
-var url = require("url");
-var $ = require("cheerio");
+const http = require("http");
+const url = require("url");
+const parse = require('csv-parse/lib/sync');
 
-var host = "http://tappedout.net/mtg-decks/";
+const host = "http://tappedout.net/mtg-decks/";
+const csvFlag = "fmt=csv";
+
+var deck;
 
 function ExtractTitle(htmlString) {
-    return $(".well-jumbotron h2", htmlString).text();
+    return $(".well-jumbotron h2", htmlString).text().trim();
 }
 
 function LoadDeck(req, res) {
-    var targetName = url.parse(req.url).pathname.substr(1);
-    var path = host + targetName + "/";
+    var targetName = url.parse(req.url).pathname.substr(1).replace(/\/$/, "");
+    var path = host + targetName + "/?" + csvFlag;
 
     try {
         if (targetName == "favicon.ico") {
@@ -20,7 +23,7 @@ function LoadDeck(req, res) {
         }
         else if (targetName == "") {
             res.writeHead(200);
-            res.end();
+            res.end(); 
         }
         else {
             var deckRequest = http.request(path, (deckResponse) => {
@@ -29,16 +32,14 @@ function LoadDeck(req, res) {
                     deckResponse.on("data", (chunk) => {
                         responseString += chunk;
                     }).on("end", () => {
+                        deck = parse(responseString, { columns: true });
 
-
-                        res.writeHead(200);
-                        res.write(ExtractTitle(responseString));
-                        res.end();
+                        res.writeHead(200, { "Content-Type": "text/json" });
+                        res.end(JSON.stringify(deck));
                     });
                 }
                 else {
-                    res.writeHead(deckResponse.statusCode);
-                    res.end();
+                    throw `Deck request returned status code ${deckResponse.statusCode}`;
                 }
             });
             deckRequest.end();

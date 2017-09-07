@@ -1,6 +1,5 @@
 var http = require("http");
 var url = require("url");
-var fs = require("fs");
 
 http.createServer(function (req, res) {
     var vhost;
@@ -15,6 +14,7 @@ http.createServer(function (req, res) {
         handler.handle(req, res);
     }
     catch (ex) {
+        console.log("[" + new Date().toJSON().substring(11, 19) + "] " + ex);
         res.writeHead(501, { "Content-Type": "text/plain" });
         res.end("Not Implemented");
     }
