@@ -51,7 +51,7 @@ function GetCards(deck, target, res) {
 
                 deck.list = parse(responseString, { columns: true });
 
-                FetchImages(deck, res);
+                SanitizeDeck(deck, res);
             });
         }
         else {
@@ -61,72 +61,68 @@ function GetCards(deck, target, res) {
     deckRequest.end();
 }
 
-function FetchImages(deck, res) {
-    var completeCount = 0;
+function SanitizeDeck(deck, res) {
     for (var i = 0; i < deck.list.length; i++) {
         var card = deck.list[i];
         card.Language = card.Language.toLowerCase();
 
         if (card.Language == "") card.Language = "en";
         else if (card.Language == "ja") card.Language = "jp";
-
-        var options = {
-            name: card.Name,
-            set: card.Printing,
-            lang: card.Language
-        };
-
-        function AssignImage(card) {
-            return function (results) {
-                card.Image = results;
-                completeCount++;
-
-                if (completeCount == deck.list.length)
-                    ReturnDeck(deck, res);
-            };
-        }
-
-        mtgimg.fetch(options, AssignImage(card));
     }
+
+    ReturnDeck(deck, res);
 }
 
-function ReturnDeck(deck, res) {
+function WriteResponseHeaders(res) {
     res.writeHead(200, {
         "Content-Type": "text/json; charset=utf-8",
         "Access-Control-Allow-Origin": "*"
     });
+}
+
+function ReturnDeck(deck, res) {
+    WriteResponseHeaders(res);
     res.end(JSON.stringify(deck));
 }
 
-function LoadDeck(req, res) {
-    var targetName = url.parse(req.url).pathname.substr(1).replace(/\/$/, "");
+function GetImage(options, res) {
+    mtgimg.fetch(options, (imgResponse) => {
+        WriteResponseHeaders(res)
+        res.end(JSON.stringify(imgResponse));
+    });
+}
 
-    var deck = {
-        name: "",
-        description: "",
-        url: "",
-        slug: "",
-        author: "",
-        userpage: "",
-        format: "",
-        list: []
-    };
-
-    deck.url = host + deckPath + targetName + "/";
-    deck.slug = targetName;
+function RouteRequest(req, res) {
+    var reqUrl = url.parse(req.url, true);
+    var requestSplit = reqUrl.pathname.split("/");
+    var mode = requestSplit[1].toLowerCase();
 
     try {
-        if (targetName == "favicon.ico") {
-            // Ignore favicon requests
-            res.writeHead(204);
-            res.end();
+        if (mode == "deck") {
+            var target = requestSplit[2];
+            var deck = {
+                name: "",
+                description: "",
+                url: "",
+                slug: "",
+                author: "",
+                userpage: "",
+                format: "",
+                list: []
+            };
+
+            deck.url = host + deckPath + target + "/";
+            deck.slug = target;
+
+            GetInfo(deck, target, res);
         }
-        else if (targetName == "") {
-            res.writeHead(200);
-            res.end();
+        else if (mode == "img") {
+            var options = reqUrl.query;
+            GetImage(options, res);
         }
         else {
-            GetInfo(deck, targetName, res);
+            res.writeHead(200);
+            res.end();
         }
     }
     catch (ex) {
@@ -137,5 +133,5 @@ function LoadDeck(req, res) {
 }
 
 module.exports = {
-    handle: LoadDeck
+    handle: RouteRequest
 }
