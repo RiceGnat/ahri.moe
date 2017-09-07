@@ -9,13 +9,19 @@ http.createServer(function (req, res) {
         vhost = null;
     }
 
+    if (vhost.toLowerCase() == "localhost") {
+        vhost = process.argv[2];
+    }
+
     try {
         var handler = require("./" + vhost + "/handler.js");
         handler.handle(req, res);
     }
     catch (ex) {
         console.log("[" + new Date().toJSON().substring(11, 19) + "] " + ex);
-        res.writeHead(501, { "Content-Type": "text/plain" });
+        res.writeHead(501, {
+            "Content-Type": "text/plain"
+        });
         res.end("Not Implemented");
     }
 }).listen(8080);

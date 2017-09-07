@@ -3,21 +3,16 @@ const url = require("url");
 const parse = require("csv-parse/lib/sync");
 const $ = require("cheerio");
 
-const host = "http://tappedout.net/mtg-decks/";
+const mtgimg = require("./mtg-imgs.js");
+
+const host = "http://tappedout.net";
+const deckPath = "/mtg-decks/";
+const userPath = "/users/"
 const printFlag = "fmt=printable";
 const csvFlag = "fmt=csv";
 
-var deck = {
-    name: "",
-    description: "",
-    url: "",
-    author: "",
-    format: "",
-    list : []
-};
-
-function GetInfo(target, res) {
-    var path = host + target + "/?" + printFlag;
+function GetInfo(deck, target, res) {
+    var path = deck.url + "?" + printFlag;
 
     var deckRequest = http.get(path, (deckResponse) => {
         if (deckResponse.statusCode == 200) {
@@ -29,9 +24,10 @@ function GetInfo(target, res) {
                 deck.name = name.substr(1, name.length - 2);
                 deck.description = $("p", responseString).first().text();
                 deck.author = $("tr:contains(User) > td", responseString).last().text();
+                deck.userpage = host + userPath + deck.author;
                 deck.format = $("tr:contains(Format) > td", responseString).last().text();
 
-                GetDeck(target, res);
+                GetCards(deck, target, res);
             });
         }
         else {
@@ -41,8 +37,8 @@ function GetInfo(target, res) {
     deckRequest.end();
 }
 
-function GetDeck(target, res) {
-    var path = host + target + "/?" + csvFlag;
+function GetCards(deck, target, res) {
+    var path = deck.url + "?" + csvFlag;
 
     var deckRequest = http.get(path, (deckResponse) => {
         if (deckResponse.statusCode == 200) {
@@ -55,7 +51,7 @@ function GetDeck(target, res) {
 
                 deck.list = parse(responseString, { columns: true });
 
-                ReturnDeck(res);
+                FetchImages(deck, res);
             });
         }
         else {
@@ -65,15 +61,59 @@ function GetDeck(target, res) {
     deckRequest.end();
 }
 
-function ReturnDeck(res) {
-    res.writeHead(200, { "Content-Type": "text/json" });
+function FetchImages(deck, res) {
+    var completeCount = 0;
+    for (var i = 0; i < deck.list.length; i++) {
+        var card = deck.list[i];
+        card.Language = card.Language.toLowerCase();
+
+        if (card.Language == "") card.Language = "en";
+        else if (card.Language == "ja") card.Language = "jp";
+
+        var options = {
+            name: card.Name,
+            set: card.Printing,
+            lang: card.Language
+        };
+
+        function AssignImage(card) {
+            return function (results) {
+                card.Image = results;
+                completeCount++;
+
+                if (completeCount == deck.list.length)
+                    ReturnDeck(deck, res);
+            };
+        }
+
+        mtgimg.fetch(options, AssignImage(card));
+    }
+}
+
+function ReturnDeck(deck, res) {
+    res.writeHead(200, {
+        "Content-Type": "text/json; charset=utf-8",
+        "Access-Control-Allow-Origin": "*"
+    });
     res.end(JSON.stringify(deck));
 }
 
 function LoadDeck(req, res) {
     var targetName = url.parse(req.url).pathname.substr(1).replace(/\/$/, "");
 
-    deck.url = host + targetName + "/";
+    var deck = {
+        name: "",
+        description: "",
+        url: "",
+        slug: "",
+        author: "",
+        userpage: "",
+        format: "",
+        list: []
+    };
+
+    deck.url = host + deckPath + targetName + "/";
+    deck.slug = targetName;
 
     try {
         if (targetName == "favicon.ico") {
@@ -86,7 +126,7 @@ function LoadDeck(req, res) {
             res.end();
         }
         else {
-            GetInfo(targetName, res);
+            GetInfo(deck, targetName, res);
         }
     }
     catch (ex) {
