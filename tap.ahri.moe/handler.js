@@ -32,6 +32,9 @@ function LoadDeck(req, res) {
                     deckResponse.on("data", (chunk) => {
                         responseString += chunk;
                     }).on("end", () => {
+                        // This is a typo from tappedout.net
+                        responseString = responseString.replace("Languange", "Language");
+
                         deck = parse(responseString, { columns: true });
 
                         res.writeHead(200, { "Content-Type": "text/json" });
