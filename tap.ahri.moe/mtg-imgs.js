@@ -10,9 +10,8 @@ function GetImage(options, callback) {
 
     var query = `${encodeURIComponent("++o!")}"${name.replace(" ", "+")}"`;
 
-    if (set == "000") {
-        // Search promos by "special" rarity
-        query += "+r:special";
+    if (set == "000" || set == "PSG") {
+        query += "+is:promo";
     }
     else if (set != "") {
         query += "+e:" + set;
