@@ -31,7 +31,7 @@ function GetInfo(deck, target, res) {
             });
         }
         else {
-            throw `Info request returned status code ${deckResponse.statusCode}`;
+            ReturnError(res, `Info request returned status code ${deckResponse.statusCode}`);
         }
     });
     deckRequest.end();
@@ -55,7 +55,7 @@ function GetCards(deck, target, res) {
             });
         }
         else {
-            throw `Deck request returned status code ${deckResponse.statusCode}`;
+            ReturnError(res, `Deck request returned status code ${deckResponse.statusCode}`);
         }
     });
     deckRequest.end();
@@ -71,6 +71,11 @@ function SanitizeDeck(deck, res) {
     }
 
     ReturnDeck(deck, res);
+}
+
+function ReturnError(res, message) {
+    res.writeHead(500, { "Content-Type": "text/plain" });
+    res.end(message ? message : "Internal Server Error");
 }
 
 function WriteResponseHeaders(res) {
@@ -127,8 +132,7 @@ function RouteRequest(req, res) {
     }
     catch (ex) {
         console.log("[" + new Date().toJSON().substring(11, 19) + "] " + ex);
-        res.writeHead(500, { "Content-Type": "text/plain" });
-        res.end("Internal Server Error");
+        ReturnError(res);
     }
 }
 

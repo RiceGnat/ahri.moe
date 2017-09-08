@@ -7,7 +7,7 @@ function GetImage(options, callback) {
     var name = options.name;
     var set = options.set;
     var lang = options.lang;
-    
+
     var query = `${encodeURIComponent("++o!")}"${name.replace(" ", "+")}"`;
 
     if (set == "000") {
@@ -21,9 +21,9 @@ function GetImage(options, callback) {
     if (lang != "") {
         query += "+l:" + lang;
     }
-    
-    var req = http.get(searchUrl + query, (res)=> {
-       if (res.statusCode == 200) {
+
+    var req = http.get(searchUrl + query, (res) => {
+        if (res.statusCode == 200) {
             var responseString = "";
             res.on("data", (chunk) => {
                 responseString += chunk;
@@ -50,8 +50,8 @@ function GetImage(options, callback) {
             });
         }
         else {
-            throw `Image search failed with status code ${res.statusCode}`;
-        } 
+            callback(null, `Image search failed with status code ${res.statusCode}`);
+        }
     }).end();
 }
 
