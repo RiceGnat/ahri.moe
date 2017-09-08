@@ -4,6 +4,7 @@ const parse = require("csv-parse/lib/sync");
 const $ = require("cheerio");
 
 const mtgimg = require("./mtg-imgs.js");
+const mtgora = require("./mtg-oracle.js");
 
 const host = "http://tappedout.net";
 const deckPath = "/mtg-decks/";
@@ -65,6 +66,7 @@ function SanitizeDeck(deck, res) {
     for (var i = 0; i < deck.list.length; i++) {
         var card = deck.list[i];
         card.Language = card.Language.toLowerCase();
+        card.Printing = card.Printing.toUpperCase();
 
         if (card.Language == "") card.Language = "en";
         else if (card.Language == "ja") card.Language = "jp";
@@ -97,6 +99,13 @@ function GetImage(options, res) {
     });
 }
 
+function GetOracle(name, res) {
+    mtgora.fetch(name, (oraResponse) => {
+        WriteResponseHeaders(res)
+        res.end(JSON.stringify(oraResponse));
+    });
+}
+
 function RouteRequest(req, res) {
     var reqUrl = url.parse(req.url, true);
     var requestSplit = reqUrl.pathname.split("/");
@@ -124,6 +133,10 @@ function RouteRequest(req, res) {
         else if (mode == "img") {
             var options = reqUrl.query;
             GetImage(options, res);
+        }
+        else if (mode == "oracle") {
+            var options = reqUrl.query;
+            GetOracle(options.name, res);
         }
         else {
             res.writeHead(200);
