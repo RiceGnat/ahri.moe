@@ -1,0 +1,373 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="http://test-realm.ricegnat.com/styling/modern/modern.css" />
+    <style>
+        body.modern {
+            font-family: "Segoe UI";
+        }
+
+        .modern a {
+            color: #000000;
+        }
+
+        .modern h3 {
+            margin-bottom: 10px;
+        }
+
+        .modern h4 {
+            margin-bottom: 5px;
+        }
+
+        .container {
+            padding: 0 50px;
+        }
+
+        .view {
+            transition: opacity linear .5s;
+        }
+
+        .hidden {
+            opacity: 0;
+        }
+
+        .section {
+            padding-bottom: 20px;
+        }
+
+        .card {
+            display: inline-block;
+            vertical-align: top;
+            position: relative;
+            width: 200px;
+            height: 285px;
+            background: black;
+            border: 5px solid black;
+            border-radius: 5px;
+            filter: contrast(105%);
+        }
+
+            .card img {
+                width: 100%;
+                height: 100%;
+                transition: opacity linear .5s;
+            }
+
+            .card.foil {
+            }
+
+        .foil.layer {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            opacity: 0.3;
+            mix-blend-mode: overlay;
+            background-image: linear-gradient(to bottom right, magenta, red, orange, yellow, lime, cyan, magenta, red);
+            animation: foilshift 3s ease infinite;
+            background-size: 150% 100%;
+        }
+
+        @keyframes foilshift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .card-title,
+        .card-info {
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 1;
+            padding: 4px;
+            overflow: hidden;
+            opacity: 0;
+            transform: scaleY(0);
+            color: white;
+            background: rgba(0, 0, 0, .8);
+            transition-property: transform, opacity;
+            transition-timing-function: linear;
+            transition-duration: .1s;
+        }
+
+        .card:hover .card-title,
+        .card:hover .card-info {
+            opacity: 1;
+            transform: scaleY(1);
+        }
+
+        .card-title {
+            top: 0;
+            transform-origin: top;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .card-info {
+            bottom: 0;
+            transform-origin: bottom;
+            font-size: 12px;
+            display: flex;
+            flex-direction: row;
+        }
+
+            .card-info .left,
+            .card-info .right {
+                padding: 0 2px;
+            }
+
+            .card-info .left {
+                flex-grow: 1;
+            }
+
+        #searchForm {
+            padding: 25px 0;
+        }
+
+        #cardTemplate {
+            display: none;
+        }
+
+        #deckTitle,
+        #deckInfo {
+            transition: opacity linear .5s;
+        }
+
+        #deckInfo {
+            margin: 0 0 15px 0;
+            padding: 5px;
+            list-style: none;
+        }
+
+            #deckInfo li {
+                display: inline-block;
+                margin-right: 20px;
+            }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        var host = "http://tap.ahri.moe/";
+        var deck;
+        var loadedCards;
+        var boards = ["main", "side", "maybe", "acquire"];
+        var types = ["sorcery", "instant", "artifact", "enchantment", "planeswalker", "creature", "land"];
+        var initialQuery = "DECK_NAME";
+
+        function LoadDeck() {
+            $("#deckTitle").addClass("hidden");
+            $("#deckInfo").addClass("hidden");
+
+            ChangeView("", function () {
+                $("#deckTitle").empty();
+                $("#deckInfo").empty();
+                $(".card-area").empty();
+                loadedCards = 0;
+
+                $.get(host + "deck/" + $("#deckSearch").val(), null, function (response) {
+                    deck = response;
+
+                    $("#deckTitle").html("<a href='" + deck.url + "' target='_blank'>" + deck.name + "</a>");
+                    $("#deckInfo").append("<li><b>Creator</b>&ensp;<a href='" + deck.userpage + "' target='_blank'>" + deck.author + "</a></li>");
+                    $("#deckInfo").append("<li><b>Format</b>&ensp;" + deck.format + "</li>");
+
+                    deck.list.forEach(function (card) {
+                        var cardDiv = $("#cardTemplate .card").clone().appendTo("#defaultView");
+                        $(".card-title", cardDiv).text(card.Name);
+                        $(".card-info .left", cardDiv).html(card.Printing + "&emsp;" + card.Language.toUpperCase() + "&emsp;" +
+                            (card.Signed ? "Signed" : "") + (card.Foil ? " Foil" : "") + (card.Alter ? " Alter" : ""));
+                        $(".card-info .right", cardDiv).html("&#215; " + card.Qty);
+                        card.object = cardDiv;
+
+                        cardDiv.addClass(card.Board.toLowerCase());
+
+                        GetCardImage(card);
+                        GetCardProperties(card);
+                    });
+                }).fail(function (xhr, textStatus, err) {
+                    $("#deckTitle").html("Couldn't load deck");
+                }).always(function () {
+                    $("#deckTitle").removeClass("hidden");
+                    $("#deckInfo").removeClass("hidden");
+                    $("#defaultView").show().removeClass("hidden");
+                });
+            })
+        }
+
+        function GetCardImage(card) {
+            var query = {
+                name: card.Name,
+                set: card.Printing,
+                lang: card.Language
+            };
+            $.get(host + "img?" + $.param(query), null, function (response) {
+                card.Image = response;
+
+                if (card.Foil) {
+                    card.object.append("<div class='foil layer'></div>");
+                    card.object.addClass("foil");
+                }
+
+                card.object.append("<img class='hidden' src='" + card.Image[0].url + "' alt='" + card.Image[0].name + "' />");
+                $("img", card.object).one("load", function () {
+                    $(this).removeClass("hidden");
+                });
+            });
+        }
+
+        function GetCardProperties(card) {
+            var query = {
+                name: card.Name
+            };
+            $.get(host + "oracle?" + $.param(query), null, function (response) {
+                card.Properties = response;
+
+                card.Properties.types.forEach(function (type) {
+                    card.object.addClass(type.toLowerCase());
+                });
+
+                loadedCards++;
+
+                if (loadedCards == deck.list.length) {
+                    ChangeView("#sortedView", SortCards);
+                }
+            });
+        }
+
+        function SortCards() {
+            $("#sortedView .section").hide();
+
+            boards.forEach(function (board) {
+                var cards = $(".card-area .card." + board);
+                if (cards.length > 0) {
+                    $("#sortedView .section." + board).show();
+
+                    if (board == "main") {
+                        var context = $("#sortedView .section." + board);
+
+                        $("h3", context).hide();
+                        cards.appendTo(".section.other .card-area", context);
+
+                        types.forEach(function (type) {
+                            var subset = cards.filter(".card." + type);
+
+                            if (subset.length > 0) {
+                                $(".section." + type, context).show();
+                                subset.appendTo(".section." + type + " .card-area", context);
+                            }
+                        });
+
+                        if ($(".section.other .card-area .card", context).length > 0) {
+                            $(".section.other", context).show();
+                        }
+                    }
+                    else {
+                        $("#sortedView .section.main h3").show();
+                        cards.appendTo("#sortedView .section." + board + " .card-area");
+                    }
+                }
+            });
+        }
+
+        function ChangeView(id, restage) {
+            $(".view").addClass("hidden");
+            setTimeout(function () {
+                $(".view").hide();
+                if (typeof restage === "function") restage();
+                $(id).show().removeClass("hidden");
+            }, 500);
+        }
+
+        $(function () {
+            $("#searchForm").on("submit", function () {
+                LoadDeck();
+                return false;
+            })
+
+            if (initialQuery != "deck_name".toUpperCase()) {
+                $("#deckSearch").val(initialQuery);
+                $("#searchForm").submit();
+            }
+        });
+    </script>
+</head>
+<body class="modern">
+    <div class="container">
+        <form id="searchForm">
+            <input type="text" id="deckSearch" autocomplete="off" /> <input type="submit" id="loadDeck" value="Load deck" />
+        </form>
+        <h2 id="deckTitle"></h2>
+        <ul id="deckInfo"></ul>
+        <div id="defaultView" class="view card-area"></div>
+        <div id="sortedView" class="view hidden">
+            <div class="main section">
+                <h3>Main</h3>
+                <div class="creature section">
+                    <h4>Creatures</h4>
+                    <div class="card-area"></div>
+                </div>
+                <div class="sorcery section">
+                    <h4>Sorceries</h4>
+                    <div class="card-area"></div>
+                </div>
+                <div class="instant section">
+                    <h4>Instants</h4>
+                    <div class="card-area"></div>
+                </div>
+                <div class="artifact section">
+                    <h4>Artifacts</h4>
+                    <div class="card-area"></div>
+                </div>
+                <div class="enchantment section">
+                    <h4>Enchantments</h4>
+                    <div class="card-area"></div>
+                </div>
+                <div class="planeswalker section">
+                    <h4>Planeswalkers</h4>
+                    <div class="card-area"></div>
+                </div>
+                <div class="land section">
+                    <h4>Lands</h4>
+                    <div class="card-area"></div>
+                </div>
+                <div class="other section">
+                    <h4>Other</h4>
+                    <div class="card-area"></div>
+                </div>
+            </div>
+            <div class="side section">
+                <h3>Sideboard</h3>
+                <div class="card-area"></div>
+            </div>
+            <div class="maybe section">
+                <h3>Maybe</h3>
+                <div class="card-area"></div>
+            </div>
+            <div class="acquire section">
+                <h3>Acquire</h3>
+                <div class="card-area"></div>
+            </div>
+        </div>
+    </div>
+    <div id="cardTemplate">
+        <div class="card">
+            <div class="card-title"></div>
+            <div class="card-info">
+                <div class="left"></div><div class="right"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

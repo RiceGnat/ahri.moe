@@ -1,5 +1,6 @@
 const http = require("http");
 const url = require("url");
+const fs = require("fs");
 const parse = require("csv-parse/lib/sync");
 const $ = require("cheerio");
 
@@ -139,8 +140,14 @@ function RouteRequest(req, res) {
             GetOracle(options.name, res);
         }
         else {
-            res.writeHead(200);
-            res.end();
+            fs.readFile(__dirname + '/index.html', function (err, data) {
+                if (err) {
+                    throw err;
+                }
+                
+                res.writeHead(200, { "Content-Type": "text/html" });
+                res.end(data.toString().replace("DECK_NAME", mode));
+            });
         }
     }
     catch (ex) {
