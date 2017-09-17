@@ -31,7 +31,7 @@ function GetImage(options, callback) {
                 $("img[src*='/scans']", responseString).each((i, element) => {
                     results[i] = {
                         name: $(element).attr("alt"),
-                        url: $(element).attr("src")
+                        url: "https://magiccards.info/" + $(element).attr("src")
                     };
                 });
 
