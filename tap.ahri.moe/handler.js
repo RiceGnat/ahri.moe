@@ -145,8 +145,17 @@ function RouteRequest(req, res) {
                     throw err;
                 }
                 
+                var str;
+
+                if (mode) {
+                    str = data.toString().replace("INITIAL_QUERY_DECK_NAME", mode);
+                }
+                else {
+                    str = data.toString();
+                }
+
                 res.writeHead(200, { "Content-Type": "text/html" });
-                res.end(data.toString().replace("DECK_NAME", mode));
+                res.end(str);
             });
         }
     }

@@ -164,7 +164,7 @@
         var loadedCards;
         var boards = ["main", "side", "maybe", "acquire"];
         var types = ["sorcery", "instant", "artifact", "enchantment", "planeswalker", "creature", "land"];
-        var initialQuery = "DECK_NAME";
+        var initialQuery = "INITIAL_QUERY_DECK_NAME";
 
         function LoadDeck() {
             $("#deckTitle").addClass("hidden");
@@ -296,7 +296,7 @@
                 return false;
             })
 
-            if (initialQuery != "deck_name".toUpperCase()) {
+            if (initialQuery != "initial_query_deck_name".toUpperCase()) {
                 $("#deckSearch").val(initialQuery);
                 $("#searchForm").submit();
             }
