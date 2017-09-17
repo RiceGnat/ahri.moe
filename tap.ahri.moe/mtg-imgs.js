@@ -1,7 +1,7 @@
-const http = require("http");
+const http = require("https");
 const $ = require("cheerio");
 
-const searchUrl = "http://magiccards.info/query?v=scan&s=cname&q=";
+const searchUrl = "https://magiccards.info/query?v=scan&s=cname&q=";
 
 function GetImage(options, callback) {
     var name = options.name;
@@ -13,11 +13,11 @@ function GetImage(options, callback) {
     if (set == "000" || set == "PSG") {
         query += "+is:promo";
     }
-    else if (set != "") {
+    else if (set) {
         query += "+e:" + set;
     }
 
-    if (lang != "") {
+    if (lang) {
         query += "+l:" + lang;
     }
 
@@ -28,7 +28,7 @@ function GetImage(options, callback) {
                 responseString += chunk;
             }).on("end", () => {
                 var results = [];
-                $("img[src*='magiccards.info/scans']", responseString).each((i, element) => {
+                $("img[src*='/scans']", responseString).each((i, element) => {
                     results[i] = {
                         name: $(element).attr("alt"),
                         url: $(element).attr("src")
