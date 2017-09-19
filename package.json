@@ -4,6 +4,7 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "csv-parse": "^1.2.1",
+    "discord.io": "^2.5.2",
     "mtgsdk": "^0.3.0"
   }
 }

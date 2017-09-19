@@ -9,7 +9,7 @@ var bot = new Discord.Client({
 
 function StartBot() {
     bot.on('ready', function (evt) {
-        console.log('Connected');
+        console.log('Mimi started');
         console.log('Logged in as: ');
         console.log(bot.username + ' - (' + bot.id + ')');
     });
