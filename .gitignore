@@ -6,3 +6,6 @@ localhost/
 
 # script for gandi deployment
 gandi-deploy.bat
+
+# authentication files
+auth.json
