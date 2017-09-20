@@ -2,12 +2,13 @@ var Discord = require('discord.io');
 var http = require('https');
 var auth = require('./auth.json');
 
-var bot = new Discord.Client({
-    token: auth.token,
-    autorun: true
-});
 
 function StartBot() {
+    var bot = new Discord.Client({
+        token: auth.token,
+        autorun: true
+    });
+
     bot.on('ready', function (evt) {
         console.log('Mimi started');
         console.log('Logged in as: ');
