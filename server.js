@@ -1,6 +1,5 @@
 var http = require("http");
 var url = require("url");
-var mimi = require("./mimi/mimi.js");
 
 http.createServer(function (req, res) {
     var vhost;
@@ -26,5 +25,3 @@ http.createServer(function (req, res) {
         res.end("Not Implemented");
     }
 }).listen(8080);
-
-mimi.start();
