@@ -34,7 +34,7 @@ function StartBot() {
     });
 
     bot.on('disconnect', function (errMsg, code) {
-        console.log(`Mimi disconnected (${errMsg})`);
+        console.log(`Mimi disconnected (${code}: ${errMsg})`);
         console.log("Reconnecting...");
         bot.connect();
     });
