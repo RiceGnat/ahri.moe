@@ -24,4 +24,4 @@ http.createServer(function (req, res) {
         });
         res.end("Not Implemented");
     }
-}).listen(8080);
+}).listen(process.env.PORT || 8080);
