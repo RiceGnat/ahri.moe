@@ -32,6 +32,12 @@ function StartBot() {
             }
         }
     });
+
+    bot.on('disconnect', function (errMsg, code) {
+        console.log(`Mimi disconnected (${errMsg})`);
+        console.log("Reconnecting...");
+        bot.connect();
+    });
 }
 
 function GetStreamInfo(name, callback) {
