@@ -28,6 +28,17 @@ function GetInfo(deck, target, res) {
                 deck.author = $("tr:contains(User) > td", responseString).last().text();
                 deck.userpage = host + userPath + deck.author;
                 deck.format = $("tr:contains(Format) > td", responseString).last().text();
+                deck.count = $("tr:contains(Cards) > td", responseString).last().text();
+
+                if (deck.format.includes("Commander")) {
+                    deck.commander = [];
+                    $("h2.snug:contains(Commander)", responseString).parent().contents().each(function (index, element) {
+                        if (element.nodeType == 3) {
+                            var match = $(element).text().match(/\d+x\s*(.+)/)
+                            if (match) deck.commander.push(match[1]);
+                        }
+                    });
+                }
 
                 GetCards(deck, target, res);
             });

@@ -19,7 +19,7 @@
         }
 
         .modern h4 {
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
 
         .container {
@@ -35,7 +35,7 @@
         }
 
         .section {
-            padding-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .card {
@@ -44,6 +44,7 @@
             position: relative;
             width: 200px;
             height: 285px;
+            margin: 2px;
             background: black;
             border: 5px solid black;
             border-radius: 5px;
@@ -147,7 +148,7 @@
         }
 
         #deckInfo {
-            margin: 0 0 15px 0;
+            margin: 0 0 10px 0;
             padding: 5px;
             list-style: none;
         }
@@ -155,11 +156,12 @@
             #deckInfo li {
                 display: inline-block;
                 margin-right: 20px;
+                margin-bottom: 5px;
             }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script>
-        var host = "http://tap.ahri.moe/";
+        var host = "http://localhost:8080/";
         var deck;
         var loadedCards;
         var boards = ["main", "side", "maybe", "acquire"];
@@ -180,8 +182,10 @@
                     deck = response;
 
                     $("#deckTitle").html("<a href='" + deck.url + "' target='_blank'>" + deck.name + "</a>");
-                    $("#deckInfo").append("<li><b>Creator</b>&ensp;<a href='" + deck.userpage + "' target='_blank'>" + deck.author + "</a></li>");
-                    $("#deckInfo").append("<li><b>Format</b>&ensp;" + deck.format + "</li>");
+                    $("#deckInfo").append("<li><b>Creator</b>&ensp;<a href='" + deck.userpage + "' target='_blank'>" + deck.author + "</a></li>")
+                        .append("<li><b>Format</b>&ensp;" + deck.format + "</li>")
+                        .append("<li><b>Cards</b>&ensp;" + deck.count + "</li>")
+                        .append("<br /><li><b>Description</b><br />" + deck.description + "</li>");
 
                     deck.list.forEach(function (card) {
                         var cardDiv = $("#cardTemplate .card").clone().appendTo("#defaultView");
@@ -269,6 +273,14 @@
                             }
                         });
 
+                        if (deck.commander) {
+                            $(".section.commander", context).show();
+                            deck.commander.forEach(function (element) {
+                                console.log(cards.filter(".card:contains(" + element + ")"));
+                                cards.filter(".card:contains(" + element + ")").appendTo(".section.commander .card-area", context);
+                            });
+                        }
+
                         if ($(".section.other .card-area .card", context).length > 0) {
                             $(".section.other", context).show();
                         }
@@ -309,11 +321,16 @@
             <input type="text" id="deckSearch" autocomplete="off" /> <input type="submit" id="loadDeck" value="Load deck" />
         </form>
         <h2 id="deckTitle"></h2>
+        <div id="deckDesc"></div>
         <ul id="deckInfo"></ul>
         <div id="defaultView" class="view card-area"></div>
         <div id="sortedView" class="view hidden">
             <div class="main section">
                 <h3>Main</h3>
+                <div class="commander section">
+                    <h4>Commander</h4>
+                    <div class="card-area"></div>
+                </div>
                 <div class="creature section">
                     <h4>Creatures</h4>
                     <div class="card-area"></div>
