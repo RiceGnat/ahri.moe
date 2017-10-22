@@ -35,7 +35,7 @@
         }
 
         .section {
-            margin-bottom: 25px;
+            margin-bottom: 60px;
         }
 
             .section .count {
@@ -132,10 +132,11 @@
             transition-duration: .1s;
         }
 
-        .card:hover > .frame > .card-title,
-        .card:hover > .frame > .card-info {
+        .frame:hover > .card-title,
+        .frame:hover > .card-info {
             opacity: 1;
             transform: scaleY(1);
+            transition-delay: 1s;
         }
 
         .card-title {
@@ -187,13 +188,10 @@
                 margin-bottom: 5px;
             }
 
-        #sortedView .card {
-            margin-bottom: 90px;
+        #sortedView:not(.commander) .card,
+        #sortedView.commander .card.land {
+            margin-bottom: 91px;
         }
-
-            #sortedView .card .card {
-                margin-bottom: 0;
-            }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script>
@@ -300,6 +298,7 @@
 
         function SortCards() {
             $("#sortedView .section").hide();
+            $("#sortedView").removeClass("commander");
 
             boards.forEach(function (board) {
                 var cards = $(`.card-area .card.${board}`);
@@ -328,6 +327,7 @@
                                 console.log(cards.filter(`.card:contains(${element})`));
                                 cards.filter(`.card:contains(${element})`).appendTo(".section.commander .card-area", context);
                             });
+                            $("#sortedView").addClass("commander");
                         }
 
                         if ($(".section.other .card-area .card", context).length > 0) {
@@ -356,7 +356,7 @@
 
                 if (stack.length > 1) {
                     for (var i = 1; i < stack.length; i++) {
-                        $(stack[i - 1]).append(stack[i]);
+                        if (i % 4 != 0) $(stack[i - 1]).append(stack[i]);
                         //$(stack[i - 1]).append($("<div>", { "class": "anchor" }).append(stack[i]));
                     }
                 }
