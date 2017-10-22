@@ -16,6 +16,9 @@ function GetImage(options, callback) {
     else if (set) {
         query += "+e:" + set;
     }
+    else {
+        query += "+not+r:special"
+    }
 
     if (lang) {
         query += "+l:" + lang;
