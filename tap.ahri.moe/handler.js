@@ -155,15 +155,17 @@ function RouteRequest(req, res) {
                 if (err) {
                     throw err;
                 }
-                
+
                 var str;
 
                 if (mode) {
-                    str = data.toString().replace("INITIAL_QUERY_DECK_NAME", mode);
+                    str = data.toString().replace(/var initialQuery.*;/, `var initialQuery = "${mode}";`);
                 }
                 else {
                     str = data.toString();
                 }
+
+                str = str.replace(/var host.*;/, `var host = "http://${req.headers["host"]}/";`);
 
                 res.writeHead(200, { "Content-Type": "text/html" });
                 res.end(str);

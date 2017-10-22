@@ -38,26 +38,55 @@
             margin-bottom: 25px;
         }
 
+            .section .count {
+                opacity: .5;
+                margin-left: 20px;
+            }
+
         .card {
             display: inline-block;
             vertical-align: top;
             position: relative;
             width: 200px;
-            height: 285px;
+            min-height: 285px;
             margin: 2px;
             background: black;
             border: 5px solid black;
             border-radius: 5px;
+            transition: z-index 0s step-start 1ms;
             filter: contrast(105%);
         }
 
             .card img {
+                display: block;
                 width: 100%;
                 height: 100%;
                 transition: opacity linear .5s;
             }
 
             .card.foil {
+            }
+
+            .card .card {
+                position: absolute;
+                top: 23px;
+                left: -7px;
+            }
+
+            .card:hover {
+                border-color: red;
+            }
+
+            .card:hover .card:not(:hover) {
+                z-index: -1;
+                border-color: blue;
+            }
+
+            .card :not(.card) {
+
+            }
+
+            .card.inspect {
             }
 
         .foil.layer {
@@ -92,7 +121,6 @@
             position: absolute;
             left: 0;
             right: 0;
-            z-index: 1;
             padding: 4px;
             overflow: hidden;
             opacity: 0;
@@ -104,8 +132,7 @@
             transition-duration: .1s;
         }
 
-        .card:hover .card-title,
-        .card:hover .card-info {
+        .card.inspect > :matches(.card-title, .card-info) {
             opacity: 1;
             transform: scaleY(1);
         }
@@ -125,8 +152,7 @@
             flex-direction: row;
         }
 
-            .card-info .left,
-            .card-info .right {
+            .card-info :matches(.left, .right) {
                 padding: 0 2px;
             }
 
@@ -158,6 +184,14 @@
                 margin-right: 20px;
                 margin-bottom: 5px;
             }
+
+        #sortedView .card {
+            margin-bottom: 90px;
+        }
+
+            #sortedView .card .card {
+                margin-bottom: 0;
+            }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script>
@@ -165,8 +199,8 @@
         var deck;
         var loadedCards;
         var boards = ["main", "side", "maybe", "acquire"];
-        var types = ["sorcery", "instant", "artifact", "enchantment", "planeswalker", "creature", "land"];
-        var initialQuery = "INITIAL_QUERY_DECK_NAME";
+        var types = ["sorcery", "instant", "enchantment", "artifact", "planeswalker", "creature", "land"];
+        var initialQuery;
 
         function LoadDeck() {
             $("#deckTitle").addClass("hidden");
@@ -178,24 +212,29 @@
                 $(".card-area").empty();
                 loadedCards = 0;
 
-                $.get(host + "deck/" + $("#deckSearch").val(), null, function (response) {
+                $.get(`${host}deck/${$("#deckSearch").val()}`, null, function (response) {
                     deck = response;
 
-                    $("#deckTitle").html("<a href='" + deck.url + "' target='_blank'>" + deck.name + "</a>");
-                    $("#deckInfo").append("<li><b>Creator</b>&ensp;<a href='" + deck.userpage + "' target='_blank'>" + deck.author + "</a></li>")
-                        .append("<li><b>Format</b>&ensp;" + deck.format + "</li>")
-                        .append("<li><b>Cards</b>&ensp;" + deck.count + "</li>")
-                        .append("<br /><li><b>Description</b><br />" + deck.description + "</li>");
+                    $("#deckTitle").html(`<a href="${deck.url}" target="_blank">${deck.name}</a>`);
+                    $("#deckInfo").append(`<li><b>Creator</b>&ensp;<a href="${deck.userpage}" target="_blank">${deck.author}</a></li>`)
+                        .append(`<li><b>Format</b>&ensp;${deck.format}</li>`)
+                        .append(`<li><b>Cards</b>&ensp;${deck.count}</li>`)
+                        .append(`<br /><li><b>Description</b><br />${deck.description}</li>`);
 
                     deck.list.forEach(function (card) {
-                        var cardDiv = $("#cardTemplate .card").clone().appendTo("#defaultView");
-                        $(".card-title", cardDiv).text(card.Name);
-                        $(".card-info .left", cardDiv).html(card.Printing + "&emsp;" + card.Language.toUpperCase() + "&emsp;" +
-                            (card.Signed ? "Signed" : "") + (card.Foil ? " Foil" : "") + (card.Alter ? " Alter" : ""));
-                        $(".card-info .right", cardDiv).html("&#215; " + card.Qty);
-                        card.object = cardDiv;
+                        card.$object = [];
 
-                        cardDiv.addClass(card.Board.toLowerCase());
+                        for (var i = 0; i < card.Qty; i++) {
+                            var cardDiv = $("#cardTemplate .card").clone().appendTo("#defaultView");
+
+                            $(".card-title", cardDiv).text(card.Name);
+                            $(".card-info .left", cardDiv).html(card.Printing + "&emsp;" + card.Language.toUpperCase() + "&emsp;" +
+                                (card.Signed ? "Signed" : "") + (card.Foil ? " Foil" : "") + (card.Alter ? " Alter" : ""));
+                            //$(".card-info .right", cardDiv).html("&#215; " + card.Qty);
+                            cardDiv.addClass(card.Board.toLowerCase());
+                            
+                            card.$object.push(cardDiv);
+                        }
 
                         GetCardImage(card);
                         GetCardProperties(card);
@@ -216,18 +255,22 @@
                 set: card.Printing,
                 lang: card.Language
             };
-            $.get(host + "img?" + $.param(query), null, function (response) {
-                card.Image = response;
+            $.get(`${host}img?${$.param(query)}`, null, function (response) {
+                //card.Image = response;
 
-                if (card.Foil) {
-                    card.object.append("<div class='foil layer'></div>");
-                    card.object.addClass("foil");
+                for (var i = 0; i < card.Qty; i++) {
+                    card.$object[i].data("image", response);
+
+                    if (card.Foil) {
+                        card.$object[i].append("<div class='foil layer'></div>");
+                        card.$object[i].addClass("foil");
+                    }
+
+                    card.$object[i].append(`<img class="hidden" src="${response[0].url}" alt="${response[0].name}" />`);
+                    $("img", card.$object[i]).one("load", function () {
+                        $(this).removeClass("hidden");
+                    });
                 }
-
-                card.object.append("<img class='hidden' src='" + card.Image[0].url + "' alt='" + card.Image[0].name + "' />");
-                $("img", card.object).one("load", function () {
-                    $(this).removeClass("hidden");
-                });
             });
         }
 
@@ -235,12 +278,14 @@
             var query = {
                 name: card.Name
             };
-            $.get(host + "oracle?" + $.param(query), null, function (response) {
-                card.Properties = response;
+            $.get(`${host}oracle?${$.param(query)}`, null, function (response) {
+                for (var i = 0; i < card.Qty; i++) {
+                    card.$object[i].properties = response;
 
-                card.Properties.types.forEach(function (type) {
-                    card.object.addClass(type.toLowerCase());
-                });
+                    response.types.forEach(function (type) {
+                        card.$object[i].addClass(type.toLowerCase());
+                    });
+                }
 
                 loadedCards++;
 
@@ -254,30 +299,31 @@
             $("#sortedView .section").hide();
 
             boards.forEach(function (board) {
-                var cards = $(".card-area .card." + board);
+                var cards = $(`.card-area .card.${board}`);
                 if (cards.length > 0) {
-                    $("#sortedView .section." + board).show();
+                    $(`#sortedView .section.${board}`).show();
 
                     if (board == "main") {
-                        var context = $("#sortedView .section." + board);
+                        var context = $(`#sortedView .section.${board}`);
 
                         $("h3", context).hide();
                         cards.appendTo(".section.other .card-area", context);
 
                         types.forEach(function (type) {
-                            var subset = cards.filter(".card." + type);
+                            var subset = cards.filter(`.card.${type}`);
 
                             if (subset.length > 0) {
-                                $(".section." + type, context).show();
-                                subset.appendTo(".section." + type + " .card-area", context);
+                                $(`.section.${type}`, context).show();
+                                subset.appendTo(`.section.${type} .card-area`, context);
+                                $(`.section.${type} .count`, context).text(subset.length);
                             }
                         });
 
                         if (deck.commander) {
                             $(".section.commander", context).show();
                             deck.commander.forEach(function (element) {
-                                console.log(cards.filter(".card:contains(" + element + ")"));
-                                cards.filter(".card:contains(" + element + ")").appendTo(".section.commander .card-area", context);
+                                console.log(cards.filter(`.card:contains(${element})`));
+                                cards.filter(`.card:contains(${element})`).appendTo(".section.commander .card-area", context);
                             });
                         }
 
@@ -287,7 +333,28 @@
                     }
                     else {
                         $("#sortedView .section.main h3").show();
-                        cards.appendTo("#sortedView .section." + board + " .card-area");
+                        cards.appendTo(`#sortedView .section.${board} .card-area`);
+                    }
+
+                    //$(`#sortedView .section.${board} h3 .count`).text($(`#sortedView .section.${board} .card`).length);
+                }
+            });
+
+            StackCards();
+        }
+
+        function StackCards() {
+            deck.list.forEach(function (card) {
+                var stack = $("#sortedView .card").map(function () {
+                    if (card.Name == $(".card-title", this).text()) {
+                        return this;
+                    }
+                });
+
+                if (stack.length > 1) {
+                    for (var i = 1; i < stack.length; i++) {
+                        $(stack[i - 1]).append(stack[i]);
+                        //$(stack[i - 1]).append($("<div>", { "class": "anchor" }).append(stack[i]));
                     }
                 }
             });
@@ -308,7 +375,7 @@
                 return false;
             })
 
-            if (initialQuery != "initial_query_deck_name".toUpperCase()) {
+            if (initialQuery) {
                 $("#deckSearch").val(initialQuery);
                 $("#searchForm").submit();
             }
@@ -328,52 +395,52 @@
             <div class="main section">
                 <h3>Main</h3>
                 <div class="commander section">
-                    <h4>Commander</h4>
+                    <h4>Commander<span class="count"></span></h4>
                     <div class="card-area"></div>
                 </div>
                 <div class="creature section">
-                    <h4>Creatures</h4>
+                    <h4>Creatures<span class="count"></span></h4>
                     <div class="card-area"></div>
                 </div>
                 <div class="sorcery section">
-                    <h4>Sorceries</h4>
+                    <h4>Sorceries<span class="count"></span></h4>
                     <div class="card-area"></div>
                 </div>
                 <div class="instant section">
-                    <h4>Instants</h4>
+                    <h4>Instants<span class="count"></span></h4>
                     <div class="card-area"></div>
                 </div>
                 <div class="artifact section">
-                    <h4>Artifacts</h4>
+                    <h4>Artifacts<span class="count"></span></h4>
                     <div class="card-area"></div>
                 </div>
                 <div class="enchantment section">
-                    <h4>Enchantments</h4>
+                    <h4>Enchantments<span class="count"></span></h4>
                     <div class="card-area"></div>
                 </div>
                 <div class="planeswalker section">
-                    <h4>Planeswalkers</h4>
+                    <h4>Planeswalkers<span class="count"></span></h4>
                     <div class="card-area"></div>
                 </div>
                 <div class="land section">
-                    <h4>Lands</h4>
+                    <h4>Lands<span class="count"></span></h4>
                     <div class="card-area"></div>
                 </div>
                 <div class="other section">
-                    <h4>Other</h4>
+                    <h4>Other<span class="count"></span></h4>
                     <div class="card-area"></div>
                 </div>
             </div>
             <div class="side section">
-                <h3>Sideboard</h3>
+                <h3>Sideboard<span class="count"></span></h3>
                 <div class="card-area"></div>
             </div>
             <div class="maybe section">
-                <h3>Maybe</h3>
+                <h3>Maybe<span class="count"></span></h3>
                 <div class="card-area"></div>
             </div>
             <div class="acquire section">
-                <h3>Acquire</h3>
+                <h3>Acquire<span class="count"></span></h3>
                 <div class="card-area"></div>
             </div>
         </div>
