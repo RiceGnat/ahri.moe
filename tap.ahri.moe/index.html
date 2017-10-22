@@ -46,16 +46,21 @@
         .card {
             display: inline-block;
             vertical-align: top;
+            margin: 1px;
             position: relative;
-            width: 200px;
-            min-height: 285px;
-            margin: 2px;
-            background: black;
-            border: 5px solid black;
-            border-radius: 5px;
+            z-index: 0;
             transition: z-index 0s step-start 1ms;
-            filter: contrast(105%);
         }
+
+            .card .frame {
+                position: relative;
+                width: 200px;
+                min-height: 285px;
+                background: black;
+                border: 5px solid black;
+                border-radius: 5px;
+                filter: contrast(105%);
+            }
 
             .card img {
                 display: block;
@@ -69,17 +74,12 @@
 
             .card .card {
                 position: absolute;
-                top: 23px;
-                left: -7px;
-            }
-
-            .card:hover {
-                border-color: red;
+                top: 30px;
+                margin: 0;
             }
 
             .card:hover .card:not(:hover) {
                 z-index: -1;
-                border-color: blue;
             }
 
             .card :not(.card) {
@@ -132,7 +132,8 @@
             transition-duration: .1s;
         }
 
-        .card.inspect > :matches(.card-title, .card-info) {
+        .card:hover > .frame > .card-title,
+        .card:hover > .frame > .card-info {
             opacity: 1;
             transform: scaleY(1);
         }
@@ -152,7 +153,8 @@
             flex-direction: row;
         }
 
-            .card-info :matches(.left, .right) {
+            .card-info .left,
+            .card-info .right {
                 padding: 0 2px;
             }
 
@@ -261,12 +263,13 @@
                 for (var i = 0; i < card.Qty; i++) {
                     card.$object[i].data("image", response);
 
+                    card.$object[i].children(".frame").append(`<img class="hidden" src="${response[0].url}" alt="${response[0].name}" />`);
+
                     if (card.Foil) {
-                        card.$object[i].append("<div class='foil layer'></div>");
+                        card.$object[i].children(".frame").append("<div class='foil layer'></div>");
                         card.$object[i].addClass("foil");
                     }
 
-                    card.$object[i].append(`<img class="hidden" src="${response[0].url}" alt="${response[0].name}" />`);
                     $("img", card.$object[i]).one("load", function () {
                         $(this).removeClass("hidden");
                     });
@@ -447,9 +450,11 @@
     </div>
     <div id="cardTemplate">
         <div class="card">
-            <div class="card-title"></div>
-            <div class="card-info">
-                <div class="left"></div><div class="right"></div>
+            <div class="frame">
+                <div class="card-title"></div>
+                <div class="card-info">
+                    <div class="left"></div><div class="right"></div>
+                </div>
             </div>
         </div>
     </div>
