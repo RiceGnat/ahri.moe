@@ -8,10 +8,11 @@
     <style>
         body.modern {
             font-family: "Segoe UI";
+            font-weight: 400;
         }
 
         .modern a {
-            color: #000000;
+            color: #444444;
         }
 
         .modern h3 {
@@ -22,8 +23,18 @@
             margin-bottom: 10px;
         }
 
+        .modern ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
         .container {
-            padding: 0 50px;
+            padding: 0 0 0 50px;
+        }
+
+        .header {
+            padding-right: 50px;
         }
 
         .view {
@@ -36,11 +47,17 @@
 
         .section {
             margin-bottom: 60px;
+            user-select: none;
         }
 
             .section .count {
                 opacity: .5;
                 margin-left: 20px;
+            }
+
+            .section .section {
+                display: inline-block;
+                margin-right: 60px;
             }
 
         .card {
@@ -74,20 +91,25 @@
 
             .card .card {
                 position: absolute;
-                top: 30px;
-                margin: 0;
+                top: 0;
+                margin: 30px 0 0 0;
             }
 
             .card:hover .card:not(:hover) {
                 z-index: -1;
             }
 
-            .card :not(.card) {
-
+            .card.held .card {
+                z-index: 0 !important;
             }
 
-            .card.inspect {
+            .card.held-root {
+                z-index: 1;
             }
+
+        .frame * {
+            pointer-events: none;
+        }
 
         .foil.layer {
             position: absolute;
@@ -132,8 +154,8 @@
             transition-duration: .1s;
         }
 
-        .frame:hover > .card-title,
-        .frame:hover > .card-info {
+        .card:not(.held) > .frame:hover > .card-title,
+        .card:not(.held) > .frame:hover > .card-info {
             opacity: 1;
             transform: scaleY(1);
             transition-delay: 1s;
@@ -163,13 +185,24 @@
                 flex-grow: 1;
             }
 
+        #controlBar {
+            display: flex;
+        }
+
         #searchForm {
             padding: 25px 0;
         }
 
-        #cardTemplate {
-            display: none;
+        #sortModes {
+            display: flex;
+            margin: 0 25px;
+            font-size: 150%;
+            font-weight: 300;
         }
+
+            #sortModes li {
+                padding: 20px 10px;
+            }
 
         #deckTitle,
         #deckInfo {
@@ -179,7 +212,6 @@
         #deckInfo {
             margin: 0 0 10px 0;
             padding: 5px;
-            list-style: none;
         }
 
             #deckInfo li {
@@ -188,8 +220,8 @@
                 margin-bottom: 5px;
             }
 
-        #sortedView:not(.commander) .card,
-        #sortedView.commander .card.land {
+        #sortedView:not(.commander) .card-area > .card,
+        #sortedView.commander .card-area > .card.land {
             margin-bottom: 91px;
         }
     </style>
@@ -201,6 +233,15 @@
         var boards = ["main", "side", "maybe", "acquire"];
         var types = ["sorcery", "instant", "enchantment", "artifact", "planeswalker", "creature", "land"];
         var initialQuery;
+
+        function $createNewCardObject() {
+            return $("<div>", { "class": "card" })
+                .append($("<div>", { "class": "frame" })
+                    .append($("<div>", { "class": "card-title" }))
+                    .append($("<div>", { "class": "card-info" })
+                        .append($("<div>", { "class": "left" }))
+                        .append($("<div>", { "class": "right" }))));
+        }
 
         function LoadDeck() {
             $("#deckTitle").addClass("hidden");
@@ -225,14 +266,14 @@
                         card.$object = [];
 
                         for (var i = 0; i < card.Qty; i++) {
-                            var cardDiv = $("#cardTemplate .card").clone().appendTo("#defaultView");
+                            var cardDiv = $createNewCardObject().appendTo("#defaultView");
 
                             $(".card-title", cardDiv).text(card.Name);
                             $(".card-info .left", cardDiv).html(card.Printing + "&emsp;" + card.Language.toUpperCase() + "&emsp;" +
                                 (card.Signed ? "Signed" : "") + (card.Foil ? " Foil" : "") + (card.Alter ? " Alter" : ""));
                             //$(".card-info .right", cardDiv).html("&#215; " + card.Qty);
                             cardDiv.addClass(card.Board.toLowerCase());
-                            
+
                             card.$object.push(cardDiv);
                         }
 
@@ -339,7 +380,7 @@
                         cards.appendTo(`#sortedView .section.${board} .card-area`);
                     }
 
-                    //$(`#sortedView .section.${board} h3 .count`).text($(`#sortedView .section.${board} .card`).length);
+                    $(`#sortedView .section.${board} h3 .count`).text($(`#sortedView .section.${board} .card`).length);
                 }
             });
 
@@ -357,10 +398,11 @@
                 if (stack.length > 1) {
                     for (var i = 1; i < stack.length; i++) {
                         if (i % 4 != 0) $(stack[i - 1]).append(stack[i]);
-                        //$(stack[i - 1]).append($("<div>", { "class": "anchor" }).append(stack[i]));
                     }
                 }
             });
+
+            $(".card").draggable();
         }
 
         function ChangeView(id, restage) {
@@ -370,6 +412,38 @@
                 if (typeof restage === "function") restage();
                 $(id).show().removeClass("hidden");
             }, 500);
+        }
+
+        /* Draggable */{
+            var heldRef;
+            $.fn.extend({
+                draggable: function () {
+                    return this.each(function () {
+                        $(this).on("mousedown.draggable", function (e) {
+                            $(this).addClass("held");
+                            $(this).closest(".card-area > .card").addClass("held-root");
+                            heldRef = {
+                                x: e.pageX,
+                                y: e.pageY
+                            };
+                            e.stopPropagation();
+                        });
+                    });
+                }
+            });
+
+            $(window).on("mouseup.draggable", function (e) {
+                $(".card.held").removeClass("held").removeAttr("style");
+                $(".card.held-root").removeClass("held-root");
+                heldRef = null;
+            }).on("mousemove.draggable", function (e) {
+                if (heldRef) {
+                    $(".card.held").css({
+                        "left": e.pageX - heldRef.x,
+                        "top": e.pageY - heldRef.y
+                    });
+                }
+            });
         }
 
         $(function () {
@@ -382,21 +456,34 @@
                 $("#deckSearch").val(initialQuery);
                 $("#searchForm").submit();
             }
+
         });
     </script>
 </head>
 <body class="modern">
     <div class="container">
-        <form id="searchForm">
-            <input type="text" id="deckSearch" autocomplete="off" /> <input type="submit" id="loadDeck" value="Load deck" />
-        </form>
-        <h2 id="deckTitle"></h2>
-        <div id="deckDesc"></div>
-        <ul id="deckInfo"></ul>
+        <div class="header">
+            <div id="controlBar">
+                <form id="searchForm">
+                    <input type="text" id="deckSearch" autocomplete="off" /> <input type="submit" id="loadDeck" value="Load deck" />
+                </form>
+                <ul id="sortModes">
+                    <li>
+                        <a href="javascript:void(0)">Default</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)">Type</a>
+                    </li>
+                </ul>
+            </div>
+            <h2 id="deckTitle"></h2>
+            <div id="deckDesc"></div>
+            <ul id="deckInfo"></ul>
+        </div>
         <div id="defaultView" class="view card-area"></div>
         <div id="sortedView" class="view hidden">
             <div class="main section">
-                <h3>Main</h3>
+                <h3>Main<span class="count"></span></h3>
                 <div class="commander section">
                     <h4>Commander<span class="count"></span></h4>
                     <div class="card-area"></div>
@@ -445,16 +532,6 @@
             <div class="acquire section">
                 <h3>Acquire<span class="count"></span></h3>
                 <div class="card-area"></div>
-            </div>
-        </div>
-    </div>
-    <div id="cardTemplate">
-        <div class="card">
-            <div class="frame">
-                <div class="card-title"></div>
-                <div class="card-info">
-                    <div class="left"></div><div class="right"></div>
-                </div>
             </div>
         </div>
     </div>
