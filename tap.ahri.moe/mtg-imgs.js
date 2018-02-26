@@ -8,7 +8,10 @@ function GetImage(options, callback) {
     var set = options.set;
     var lang = options.lang;
 
-    var query = `${encodeURIComponent("++o!")}"${name.replace(" ", "+")}"`;
+    var query = encodeURIComponent(`++o!"${name}"`);
+    
+    // Correcting for wrong Unstable set code on tappedout.net
+    if (set == "UN3") set = "UST";
 
     if (set == "000" || set == "PSG") {
         query += "+is:promo";
