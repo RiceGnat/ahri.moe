@@ -5,7 +5,6 @@ function GetCard(name, callback) {
         var i = 0;
         do {
             card = cards[i];
-            console.log(card.name);
             i++;
         } while (card.name.toLowerCase() != name.toLowerCase());
         var result = {
