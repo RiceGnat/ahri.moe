@@ -10,17 +10,11 @@ function GetImage(options, callback) {
 
     var query = encodeURIComponent(`++o!"${name}"`);
     
-    // Correcting for wrong Unstable set code on tappedout.net
-    if (set == "UN3") set = "UST";
-
-    if (set == "000" || set == "PSG") {
-        query += "+is:promo";
-    }
-    else if (set) {
+    if (set) {
         query += "+e:" + set;
     }
     else {
-        query += "+not+r:special"
+        query += "+not+r:special";
     }
 
     if (lang) {
@@ -37,7 +31,7 @@ function GetImage(options, callback) {
                 $("img[src*='/scans']", responseString).each((i, element) => {
                     results[i] = {
                         name: $(element).attr("alt"),
-                        url: "https://magiccards.info/" + $(element).attr("src")
+                        url: "https://magiccards.info" + $(element).attr("src")
                     };
                 });
 

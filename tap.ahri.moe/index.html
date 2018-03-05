@@ -78,8 +78,12 @@
                 min-height: 285px;
                 background: black;
                 border: 5px solid black;
-                border-radius: 5px;
+                border-radius: 8px;
                 filter: contrast(105%);
+            }
+
+            .card .frame * {
+                pointer-events: none;
             }
 
             .card img {
@@ -89,7 +93,33 @@
                 transition: opacity linear .5s;
             }
 
-            .card.foil {
+            .card.borderless .frame {
+                width: 210px;
+                min-height: 295px;
+                border: 0;
+                background: none;
+            }
+
+            .card .foil.layer {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                opacity: 0.3;
+                mix-blend-mode: overlay;
+                background-image: linear-gradient(to bottom right, magenta, red, orange, yellow, lime, cyan, magenta, red);
+                animation: foilshift 3s ease infinite;
+                background-size: 150% 100%;
+            }
+
+            .card.borderless img {
+                border-radius: 8px;
+                height: 295px;
+            }
+
+            .card.borderless .foil.layer {
+                border-radius: 8px;
             }
 
             .card .card {
@@ -110,22 +140,7 @@
                 z-index: 1;
             }
 
-        .frame * {
-            pointer-events: none;
-        }
-
-        .foil.layer {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            opacity: 0.3;
-            mix-blend-mode: overlay;
-            background-image: linear-gradient(to bottom right, magenta, red, orange, yellow, lime, cyan, magenta, red);
-            animation: foilshift 3s ease infinite;
-            background-size: 150% 100%;
-        }
+        
 
         @keyframes foilshift {
             0% {
@@ -274,13 +289,11 @@
                             $(".card-title", cardDiv).text(card.Name);
                             $(".card-info .left", cardDiv).html(card.Printing + "&emsp;" + card.Language.toUpperCase() + "&emsp;" +
                                 (card.Signed ? "Signed" : "") + (card.Foil ? " Foil" : "") + (card.Alter ? " Alter" : ""));
-                            //$(".card-info .right", cardDiv).html("&#215; " + card.Qty);
                             cardDiv.addClass(card.Board.toLowerCase());
 
                             card.$object.push(cardDiv);
                         }
 
-                        GetCardImage(card);
                         GetCardProperties(card);
                     });
                 }).fail(function (xhr, textStatus, err) {
@@ -293,10 +306,10 @@
             })
         }
 
-        function GetCardImage(card) {
+        function GetCardImage(card, oracle) {
             var query = {
                 name: card.Name,
-                set: card.Printing,
+                set: oracle.imgset,
                 lang: card.Language
             };
             $.get(`${host}img?${$.param(query)}`, null, function (response) {
@@ -310,6 +323,10 @@
                         card.$object[i].addClass("foil");
                     }
 
+                    if (oracle.set == "MPS_AKH") {
+                        card.$object[i].addClass("borderless");
+                    }
+
                     $("img", card.$object[i]).one("load", function () {
                         $(this).removeClass("hidden");
                     });
@@ -319,9 +336,12 @@
 
         function GetCardProperties(card) {
             var query = {
-                name: card.Name
+                name: card.Name,
+                set: card.Printing
             };
             $.get(`${host}oracle?${$.param(query)}`, null, function (response) {
+                GetCardImage(card, response);
+
                 for (var i = 0; i < card.Qty; i++) {
                     card.$object[i].properties = response;
 

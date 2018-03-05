@@ -111,8 +111,8 @@ function GetImage(options, res) {
     });
 }
 
-function GetOracle(name, res) {
-    mtgora.fetch(name, (oraResponse) => {
+function GetOracle(options, res) {
+    mtgora.fetch(options, (oraResponse) => {
         WriteResponseHeaders(res)
         res.end(JSON.stringify(oraResponse));
     });
@@ -148,7 +148,7 @@ function RouteRequest(req, res) {
         }
         else if (mode == "oracle") {
             var options = reqUrl.query;
-            GetOracle(options.name, res);
+            GetOracle(options, res);
         }
         else {
             fs.readFile(__dirname + '/index.html', function (err, data) {
