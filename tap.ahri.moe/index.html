@@ -309,7 +309,7 @@
         function GetCardImage(card, oracle) {
             var query = {
                 name: card.Name,
-                set: oracle.imgset,
+                set: oracle.imgset ? oracle.imgset : card.Printing,
                 lang: card.Language
             };
             $.get(`${host}img?${$.param(query)}`, null, function (response) {
