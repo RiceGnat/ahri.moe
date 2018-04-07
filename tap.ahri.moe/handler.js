@@ -12,16 +12,18 @@ const hostDeckPath = "/mtg-decks/";
 const hostUserPath = "/users/"
 const printFlag = "fmt=printable";
 const csvFlag = "fmt=csv";
+const requestHeaders = {
+    "Cache-Control": "no-cache",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
+};
 
 function GetInfo(deck, target, res) {
     var deckRequest = http.get({
         hostname: host,
         path: hostDeckPath + deck.slug + "/?" + printFlag,
-        headers: {
-            "Cache-Control": "no-cache",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
-        }
+        headers: requestHeaders
     }, (deckResponse) => {
+        console.log(deckResponse);
         if (deckResponse.statusCode == 200) {
             var responseString = "";
             deckResponse.on("data", (chunk) => {
@@ -49,9 +51,9 @@ function GetInfo(deck, target, res) {
             });
         }
         else {
-            ReturnError(res, `Info request returned status code ${deckResponse.statusCode}\n${JSON.stringify(deckResponse)}`);
+            ReturnError(res, `Info request returned status code ${deckResponse.statusCode}\n${deckResponse.headers}\n${deckResponse.req}`);
         }
-    });
+        });
     deckRequest.end();
 }
 
@@ -60,10 +62,7 @@ function GetCards(deck, target, res) {
     var deckRequest = http.get({
         hostname: host,
         path: hostDeckPath + deck.slug + "/?" + csvFlag,
-        headers: {
-            "Cache-Control": "no-cache",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
-        }
+        headers: requestHeaders
     }, (deckResponse) => {
         if (deckResponse.statusCode == 200) {
             var responseString = "";
