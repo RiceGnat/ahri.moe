@@ -51,7 +51,7 @@ function GetInfo(deck, target, res) {
             });
         }
         else {
-            ReturnError(res, `Info request returned status code ${deckResponse.statusCode}\n${JSON.stringify(deckResponse.headers)}\n${JSON.stringify(deckResponse.req)}`);
+            ReturnError(res, `Info request returned status code ${deckResponse.statusCode}\n${JSON.stringify(deckResponse.headers)}`);
         }
         });
     deckRequest.end();
