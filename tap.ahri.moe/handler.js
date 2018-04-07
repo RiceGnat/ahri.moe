@@ -52,12 +52,10 @@ function GetInfo(deck, target, res) {
             ReturnError(res, `Info request returned status code ${deckResponse.statusCode}`);
         }
     });
-    deckRequest.setTimeout(10000);
     deckRequest.end();
 }
 
 function GetCards(deck, target, res) {
-    var path = deck.url + "?" + csvFlag;
 
     var deckRequest = http.get({
         hostname: host,
