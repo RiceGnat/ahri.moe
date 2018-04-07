@@ -7,16 +7,21 @@ const $ = require("cheerio");
 const mtgimg = require("./mtg-imgs.js");
 const mtgora = require("./mtg-oracle.js");
 
-const host = "http://tappedout.net";
-const deckPath = "/mtg-decks/";
-const userPath = "/users/"
+const host = "tappedout.net";
+const hostDeckPath = "/mtg-decks/";
+const hostUserPath = "/users/"
 const printFlag = "fmt=printable";
 const csvFlag = "fmt=csv";
 
 function GetInfo(deck, target, res) {
-    var path = deck.url + "?" + printFlag;
-
-    var deckRequest = http.get(path, (deckResponse) => {
+    var deckRequest = http.get({
+        hostname: host,
+        path: hostDeckPath + deck.slug + "/?" + printFlag,
+        headers: {
+            "Cache-Control": "no-cache",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
+        }
+    }, (deckResponse) => {
         if (deckResponse.statusCode == 200) {
             var responseString = "";
             deckResponse.on("data", (chunk) => {
@@ -26,7 +31,7 @@ function GetInfo(deck, target, res) {
                 deck.name = name.substr(1, name.length - 2);
                 deck.description = $("p", responseString).first().text();
                 deck.author = $("tr:contains(User) > td", responseString).last().text();
-                deck.userpage = host + userPath + deck.author;
+                deck.userpage = host + hostUserPath + deck.author;
                 deck.format = $("tr:contains(Format) > td", responseString).last().text();
                 deck.count = $("tr:contains(Cards) > td", responseString).last().text();
 
@@ -47,13 +52,21 @@ function GetInfo(deck, target, res) {
             ReturnError(res, `Info request returned status code ${deckResponse.statusCode}`);
         }
     });
+    deckRequest.setTimeout(10000);
     deckRequest.end();
 }
 
 function GetCards(deck, target, res) {
     var path = deck.url + "?" + csvFlag;
 
-    var deckRequest = http.get(path, (deckResponse) => {
+    var deckRequest = http.get({
+        hostname: host,
+        path: hostDeckPath + deck.slug + "/?" + csvFlag,
+        headers: {
+            "Cache-Control": "no-cache",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
+        }
+    }, (deckResponse) => {
         if (deckResponse.statusCode == 200) {
             var responseString = "";
             deckResponse.on("data", (chunk) => {
@@ -137,7 +150,7 @@ function RouteRequest(req, res) {
                 list: []
             };
 
-            deck.url = host + deckPath + target + "/";
+            deck.url = hostDeckPath + target + "/";
             deck.slug = target;
 
             GetInfo(deck, target, res);
