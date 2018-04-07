@@ -13,7 +13,6 @@ const hostUserPath = "/users/"
 const printFlag = "fmt=printable";
 const csvFlag = "fmt=csv";
 const requestHeaders = {
-    "Cache-Control": "no-cache",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
 };
 
@@ -58,7 +57,6 @@ function GetInfo(deck, target, res) {
 }
 
 function GetCards(deck, target, res) {
-
     var deckRequest = http.get({
         hostname: host,
         path: hostDeckPath + deck.slug + "/?" + csvFlag,
