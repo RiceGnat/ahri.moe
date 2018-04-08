@@ -22,7 +22,6 @@ function GetInfo(deck, target, res) {
         path: hostDeckPath + deck.slug + "/?" + printFlag,
         headers: requestHeaders
     }, (deckResponse) => {
-        console.log(deckResponse);
         if (deckResponse.statusCode == 200) {
             var responseString = "";
             deckResponse.on("data", (chunk) => {
