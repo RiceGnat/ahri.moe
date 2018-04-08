@@ -7,15 +7,13 @@ const $ = require("cheerio");
 const mtgimg = require("./mtg-imgs.js");
 const mtgora = require("./mtg-oracle.js");
 
-const host = "tappedout.net";
+const host = "tapped-out-proxy.herokuapp.com";
 const hostDeckPath = "/mtg-decks/";
 const hostUserPath = "/users/"
 const printFlag = "fmt=printable";
 const csvFlag = "fmt=csv";
 const requestHeaders = {
     "Cache-Control": "no-cache",
-    "Connection": "keep-alive",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
 };
 
 function GetInfo(deck, target, res) {
@@ -54,7 +52,7 @@ function GetInfo(deck, target, res) {
         else {
             ReturnError(res, `Info request returned status code ${deckResponse.statusCode}\n${JSON.stringify(deckResponse.headers)}`);
         }
-        });
+    });
     deckRequest.end();
 }
 
