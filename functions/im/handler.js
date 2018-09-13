@@ -18,10 +18,11 @@ module.exports = express.Router()
 
     const target = targetName.split(".");
     const extension = target[1] || defaultExtension;
+    const url = `http://www.ricegnat.com/junk/${target[0]}.${extension}`;
 
     // Make a HEAD request to check that the image is present
     request({
-        url: `http://www.ricegnat.com/junk/${target[0]}.${extension}`,
+        url: url,
         method: "HEAD"
     }, (err, resp) => {
         if (err)
@@ -37,7 +38,7 @@ module.exports = express.Router()
                     + `<meta name="twitter:site" content="${twitterHandle}" />`
                     + `<meta name="twitter:title" content="${title}" />`
                     + `<meta name="twitter:description" content="${timestamp}" />`
-                    + `<meta name="twitter:image" content="${redirectUrl}" />`
+                    + `<meta name="twitter:image" content="${url}" />`
                     + `<script>window.location.replace("${redirectUrl}");</script>`;
 
         res.send(body);
