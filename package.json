@@ -2,7 +2,8 @@
   "name": "ahri.moe",
   "version": "0.0.1",
   "scripts": {
-    "local": "node local.js"
+    "local": "node local.js",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
