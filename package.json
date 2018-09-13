@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "main": "server.js",
   "scripts": {
-    "local": "node local.js"
+    "local": "node local.js",
+    "install": "git submodule update --init --recursive"
   },
   "repository": {
     "type": "git",

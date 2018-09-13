@@ -9,7 +9,7 @@ const app = express();
 
 fs.readdir(f, (err, files) => {
     for (file of files) {
-        app.use(subdomain(file, require(path.join(f, file, "handler.js"))));
+        app.use(subdomain(file, require(path.join(f, file, "router.js"))));
     }
 })
 
