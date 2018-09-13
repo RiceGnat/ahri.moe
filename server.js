@@ -1,27 +1,23 @@
-var http = require("http");
-var url = require("url");
+const express = require("express");
+const subdomain = require("express-subdomain");
+const fs = require("fs");
+const path = require("path");
 
-http.createServer(function (req, res) {
-    var vhost;
-    if ('host' in req.headers) {
-        vhost = req.headers['host'].split(':')[0];
-    } else {
-        vhost = null;
-    }
+const port = (process.env.PORT || 8080);
+const f = path.join(__dirname, "functions");
+const app = express();
 
-    if (vhost.toLowerCase() == "localhost") {
-        vhost = process.argv[2];
+fs.readdir(f, (err, files) => {
+    for (file of files) {
+        app.use(subdomain(file, require(path.join(f, file, "handler.js"))));
     }
+})
 
-    try {
-        var handler = require("./" + vhost + "/handler.js");
-        handler.handle(req, res);
-    }
-    catch (ex) {
-        console.log("[" + new Date().toJSON().substring(11, 19) + "] " + ex);
-        res.writeHead(501, {
-            "Content-Type": "text/plain"
-        });
-        res.end("Not Implemented");
-    }
-}).listen(process.env.PORT || 8080);
+app.use((err, req, res, next) => {
+    console.log(err);
+    res.status(500).send();
+});
+
+app.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+});
