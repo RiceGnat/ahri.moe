@@ -5,6 +5,10 @@
   "scripts": {
     "local": "node local.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RiceGnat/ahri.moe.git"
+  },
   "dependencies": {
     "express": "^4.16.3",
     "express-subdomain": "^1.0.5",

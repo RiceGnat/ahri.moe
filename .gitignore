@@ -1,11 +1,5 @@
 # Don't commit node modules
 node_modules/
 
-# Ignore symbolic link created for local node.js testing
-localhost/
-
 # script for gandi deployment
 gandi-deploy.bat
-
-# authentication files
-auth.json
